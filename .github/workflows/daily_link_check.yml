@@ -1,0 +1,29 @@
+name: Daily Link Health Check
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # Every day at 3:00 AM UTC
+  workflow_dispatch:       # Manual run option
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    - name: Run link check script
+      run: python link_checker.py
+      env:
+        SMTP_USER: ${{ secrets.SMTP_USER }}
+        SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        EMAIL_TO: ${{ secrets.EMAIL_TO }}
