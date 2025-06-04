@@ -8,6 +8,7 @@ import csv
 
 urls = [
     "https://swimmersweb.com/",
+        "https://swimmersweb.com/fake-broken-link",
     "https://swimmersweb.com/register",
     "https://swimmersweb.com/login",
     "https://swimmersweb.com/favorites",
