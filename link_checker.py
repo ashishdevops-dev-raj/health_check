@@ -8,7 +8,6 @@ import csv
 
 urls = [
     "https://swimmersweb.com/",
-        "https://swimmersweb.com/fake-broken-link",
     "https://swimmersweb.com/register",
     "https://swimmersweb.com/login",
     "https://swimmersweb.com/favorites",
@@ -87,7 +86,7 @@ def generate_html_report(report):
     </body>
     </html>
     """
-    return html, error_count > 0
+    return html, error_count
 
 def write_csv(report):
     with open("report.csv", "w", newline="") as f:
@@ -95,9 +94,12 @@ def write_csv(report):
         writer.writerow(["URL", "Status", "Response Time"])
         writer.writerows(report)
 
-def send_email(html_report):
+def send_email(html_report, error_count):
+    subject_prefix = "❗" if error_count > 0 else "✅"
+    subject = f"{subject_prefix} SwimmersWeb - Link Health Check"
+
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = "❗ SwimmersWeb - Link Health Check Failures"
+    msg["Subject"] = subject
     msg["From"] = os.environ["SMTP_USER"]
     msg["To"] = os.environ["EMAIL_TO"]
 
@@ -112,12 +114,8 @@ if __name__ == "__main__":
     report = check_links(urls)
     write_csv(report)
 
-    html_report, has_errors = generate_html_report(report)
+    html_report, error_count = generate_html_report(report)
+    send_email(html_report, error_count)
 
-    # Only send email if there's an error
-    if has_errors:
-        send_email(html_report)
-
-    # Optionally log for GitHub artifact or local archive
     with open("link_check_log.txt", "a") as log:
-        log.write(f"{datetime.now()} - Errors: {has_errors}\n")
+        log.write(f"{datetime.now()} - Errors: {error_count}\n")
