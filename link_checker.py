@@ -4,6 +4,7 @@ from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 import csv
 
 urls = [
@@ -88,24 +89,32 @@ def generate_html_report(report):
     """
     return html, error_count
 
-def write_csv(report):
-    with open("report.csv", "w", newline="") as f:
+def write_csv(report, filename="report.csv"):
+    with open(filename, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["URL", "Status", "Response Time"])
         writer.writerows(report)
 
-def send_email(html_report, error_count):
+def send_email(html_report, error_count, attachment_path="report.csv"):
     subject_prefix = "❗" if error_count > 0 else "✅"
     subject = f"{subject_prefix} SwimmersWeb - Link Health Check"
 
-    msg = MIMEMultipart("alternative")
+    msg = MIMEMultipart("mixed")
     msg["Subject"] = subject
     msg["From"] = os.environ["SMTP_USER"]
     msg["To"] = os.environ["EMAIL_TO"]
 
-    mime_html = MIMEText(html_report, "html")
-    msg.attach(mime_html)
+    # HTML part
+    html_part = MIMEText(html_report, "html")
+    msg.attach(html_part)
 
+    # Attach CSV file
+    with open(attachment_path, "rb") as file:
+        part = MIMEApplication(file.read(), Name=os.path.basename(attachment_path))
+        part["Content-Disposition"] = f'attachment; filename="{os.path.basename(attachment_path)}"'
+        msg.attach(part)
+
+    # Send email
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(os.environ["SMTP_USER"], os.environ["SMTP_PASS"])
         server.send_message(msg)
