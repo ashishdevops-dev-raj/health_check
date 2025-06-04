@@ -3,7 +3,7 @@ name: Daily Link Health Check
 on:
   schedule:
     - cron: '0 3 * * *'   # Every day at 3:00 AM UTC
-  workflow_dispatch:       # Manual run option
+  workflow_dispatch:
 
 jobs:
   check-links:
@@ -27,3 +27,11 @@ jobs:
         SMTP_USER: ${{ secrets.SMTP_USER }}
         SMTP_PASS: ${{ secrets.SMTP_PASS }}
         EMAIL_TO: ${{ secrets.EMAIL_TO }}
+
+    - name: Upload CSV report
+      uses: actions/upload-artifact@v4
+      with:
+        name: link-report
+        path: |
+          report.csv
+          link_check_log.txt
